@@ -1,1 +1,663 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quest-Viewer by Julian</title>
+  <style>
+    :root{
+      --bg: #0f1115;
+      --panel: #151922;
+      --panel2: #111520;
+      --text: #e7e9ee;
+      --muted: #a9afbf;
+      --line: rgba(255,255,255,0.10);
+      --accent: #d2a84b; 
+      --danger: #ff4d6d;
+      --ok: #51cf66;
+      --radius: 14px;
+      --shadow: 0 12px 35px rgba(0,0,0,.35);
+      --maxw: 1050px;
+    }
+
+    * { box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(210,168,75,.18), transparent 55%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(81,207,102,.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    header{
+      padding: 28px 18px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(21,25,34,.85), rgba(15,17,21,.35));
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(8px);
+      z-index: 5;
+    }
+
+    .wrap{
+      width: min(var(--maxw), 100%);
+      margin: 0 auto;
+    }
+
+    .titlebar{
+      display: flex;
+      gap: 14px;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    h1{
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    main{
+      padding: 16px 18px 40px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(21,25,34,.85), rgba(17,21,32,.75));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card + .card { margin-top: 14px; }
+
+    .card-head{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255,255,255,0.02);
+    }
+    .card-head .label{
+      font-weight: 650;
+      font-size: 13px;
+      letter-spacing: .2px;
+      color: var(--text);
+    }
+    .pill{
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+      white-space: nowrap;
+    }
+    em {
+    color: #ffffff;
+    font-style: normal;
+    text-shadow: 0 0 5px #ffffff;
+    }
+
+    /* Ausgangslage */
+    .intro{
+      padding: 14px;
+    }
+    .intro p{
+      margin: 0;
+      color: var(--text);
+    }
+    .intro .muted{
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 13px;
+    }
+
+    /* Bildblock */
+    figure{
+      margin: 0;
+      border-top: 1px solid var(--line);
+    }
+    .scene{
+      display: block;
+      width: 100%;
+      max-height: 360px;
+      object-fit: cover;
+      background: rgba(255,255,255,0.03);
+    }
+    figcaption{
+      padding: 10px 14px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+      background: rgba(0,0,0,0.18);
+    }
+
+    /* 2-Spalten Layout */
+    .grid{
+      display: grid;
+      grid-template-columns: 2.02fr 0.8fr;
+      gap: 14px;
+    }
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Dialoge */
+    .dialog{
+      padding: 14px;
+    }
+    .dialog p{ margin: 0 0 10px; }
+    .dialog p:last-child{ margin-bottom: 0; }
+
+    .line{
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      margin-bottom: 10px;
+    }
+    .speaker{
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--accent);
+      margin-bottom: 6px;
+      letter-spacing: .2px;
+    }
+    .npc{
+      color: var(--accent);
+    }
+    .quote{
+      color: var(--text);
+      margin: 0;
+      white-space: pre-wrap; /* gut für Zeilenumbrüche */
+    }
+    .choice{
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .choice b{ color: var(--text); }
+
+    /* Stats */
+    .stats{
+      padding: 14px;
+    }
+    .stat-grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stat{
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.02);
+    }
+    .stat .k{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .stat .v{
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .tag{
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(0,0,0,0.18);
+    }
+
+    /* Kleine Leiste für "Relevanz" / Hinweise */
+    .option{
+      margin-top: 12px;
+      border-left: 3px solid var(--accent);
+      padding: 10px 12px;
+      background: rgba(210,168,75,.08);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .js-option{
+      cursor: pointer;
+      user-select: none;
+      }
+
+    .js-option:hover{
+      filter: brightness(1.08);
+    }
+
+
+    footer{
+      padding: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    a{ color: var(--accent); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap">
+      <div class="titlebar">
+        <h1>Quest: Der faule Holzfäller</h1>
+        <div class="subtitle">Küstenland (Ardea ⇄ Kap Dun) · Präsentations-Template</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- 1) Ausgangslage (Textfeld oben) -->
+    <section class="card" id="ausgangslage">
+      <div class="card-head">
+        <div class="label">Ausgangslage</div>
+        <div class="pill">Setup & Hook</div>
+      </div>
+      <div class="intro">
+        <p>
+            Die Quest beginnt in <em>Kap Dun</em>.
+            <em class="npc">Ein alter Ladenbesitzer (Curt)</em> betreibt dort einen kleinen Handelsposten und verkauft unter anderem <em>Brennholz</em>, das Leute aufgrund des kalten feuchten, Küstenwinds dringend zum Heizen ihrer Häuser benötigen.
+            
+            Das Holz lässt er von einem <em class="npc">unterbezahlten jungen Mann (Nik)</em> schlagen, der die Arbeit aus Geldnot angenommen hat. In letzter Zeit bleiben die Lieferungen jedoch aus: Der Holzfäller ist bereits zum fünften Mal nicht erschienen. 
+            Der namenlose Held wird beauftragt, das Holzfällerlager im nahegelegenen Wald aufzusuchen, den <em>Grund für das Ausbleiben der Lieferungen zu klären</em> und dafür zu sorgen, dass der Holzfäller seine Arbeit wieder aufnimmt.
+          
+        </p>
+
+      </div>
+
+      <!-- 2) Optionales Foto der Szenerie -->
+      <figure>
+        <!-- Wenn du kein Bild hast: lass das <img> weg oder setz display:none -->
+        <img class="scene" src="SCENE_IMAGE_OPTIONAL.jpg" alt="Szenerie (optional)" />
+        <figcaption>
+          <!-- > (z. B. Küsten-Holzfällerlager bei Nebel).  -->
+          <!-- <span class="muted">Wenn kein Bild: <code>&lt;img&gt;</code> entfernen oder src leer lassen.</span> -->
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- 3) Zwei Textfelder: links Dialoge, rechts Stats -->
+    <section class="grid" id="content">
+
+      <!-- LINKS: Dialoge (groß) -->
+      <article class="card">
+        <div class="card-head">
+          <div class="label">Dialoge & Ablauf</div>
+          <!-- <div class="pill">Links: groß</div> -->
+        </div>
+
+        <div class="dialog">
+          <div class="line">
+            <div class="speaker">Dialog</div>
+            <p class="quote" id="dialogText"><!--Hier kommt der Dialog hin--></p>
+          </div>
+
+          <div class="option js-option" data-i="0">Hier kommt die Option hin.</div>
+          <div class="option js-option" data-i="1">Hier kommt die Option hin.</div>
+          <div class="option js-option" data-i="2">Hier kommt die Option hin.</div>
+          <div class="option js-option" data-i="3">Hier kommt die Option hin.</div>
+        </div>
+      </article>
+
+      
+      <aside class="card">
+        <div class="card-head">
+          <div class="label">namenloser Held – Questbelohnungen</div>
+          <!-- <div class="pill">nur ein Beispiel</div> -->
+        </div>
+
+        <div class="stats">
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="k">Δ Erfahrung</div>
+              <div class="v" id="stat_xp">0</div>
+            </div>
+
+            <div class="stat">
+              <div class="k">Δ Gold</div>
+              <div class="v" id="stat_gold">0</div>
+            </div>
+
+            <div class="stat">
+              <div class="k">Δ Stärke</div>
+              <div class="v" id="stat_str">0</div>
+            </div>
+
+            <div class="stat">
+              <div class="k">Δ Geschick</div>
+              <div class="v" id="stat_dex">0</div>
+            </div>
+
+            <div class="stat">
+              <div class="k">Δ Ruf (Kap Dun?)</div>
+              <div class="v" id="stat_rep_kd">0</div>
+            </div>
+
+            <div class="stat">
+              <div class="k">Δ Ruf (Küste?)</div>
+              <div class="v" id="stat_rep_coast">0</div>
+            </div>
+          </div>
+
+          <div class="option" style="border-left-color: var(--ok); background: rgba(81,207,102,.08);">
+            Dieses Fenster zeigt, wie sich die Werte des namenlosen Helden während des Questverlaufs verändern. Wenn er etwa Gold, Stärke oder Erfahrung während oder durch Abschluss einer Quest bekommt.
+          </div>
+        </div>
+      </aside>
+
+    </section>
+
+    <footer>
+      Julians Template für Quest-Präsentation (c) 2026
+    </footer>
+  </main>
+</body>
+
+<script>
+  /*
+    ============================================================
+    1) DATEN: Die "Quest" als Wörterbuch (Object) von Steps
+    ============================================================
+
+    STEPS ist ein Objekt, in dem jeder Key (z.B. "node", "endeDemo")
+    einen Dialog-Knoten repräsentiert.
+
+    Jeder Step hat:
+    - dialog: Text, der angezeigt wird
+    - options: Array von Antwortmöglichkeiten (Buttons)
+      Jede Option kann haben:
+      - text: Button-Text
+      - next: ID des nächsten Steps (muss in STEPS existieren)
+      - effects: Stat-Änderungen, z.B. { xp:+75, gold:+25 }
+      - reset: true => Stats zurücksetzen (z.B. beim Neustart)
+  */
+  const STEPS = {
+
+    // Beispiel-Step: "node"
+    node: {
+      dialog: `Dialogue.`,
+      options: [
+        {
+          text: "Answer Option",
+          next: "next_node",
+          effects: { xp: +75, gold: +25, rep_coast: -1 }
+        }
+      ]
+    },
+
+    // Step fürs Ende der Demo
+    endeDemo: {
+      dialog: `Du hast das Ende der Quest-Demo erreicht.`,
+      options: [
+        { text: "Neu starten", next: "start", reset: true }
+      ]
+    }
+  };
+
+  /*
+    ============================================================
+    2) DOM: HTML-Elemente holen, die wir später "füttern"
+    ============================================================
+
+    DOM = das, was der Browser aus deinem HTML gebaut hat.
+    Wir greifen auf Elemente zu, um Text zu setzen / Buttons zu steuern.
+  */
+
+  // Das Textfeld/Element, wo der Dialogtext angezeigt wird
+  const dialogEl = document.getElementById("dialogText");
+
+  /*
+    querySelectorAll(".js-option") holt ALLE Elemente mit der Klasse js-option.
+    Array.from(...) macht daraus ein echtes Array, damit wir forEach etc. nutzen können.
+    optionEls sind also deine Antwort-Buttons (oder Klickflächen).
+  */
+  const optionEls = Array.from(document.querySelectorAll(".js-option"));
+
+  /*
+    Stat-Elemente:
+    Hier speichern wir die HTML-Elemente, die die Stats anzeigen.
+    Falls ein Element im HTML NICHT existiert => ist es null.
+    Das ist okay, wir prüfen später mit: if (statEls.xp) ...
+  */
+  const statEls = {
+    xp: document.getElementById("stat_xp"),
+    gold: document.getElementById("stat_gold"),
+    str: document.getElementById("stat_str"),
+    dex: document.getElementById("stat_dex"),
+    rep_kd: document.getElementById("stat_rep_kd"),
+    rep_coast: document.getElementById("stat_rep_coast"),
+  };
+
+  /*
+    ============================================================
+    3) STATE: Unsere "Spielwerte" (hier als kumulierte Änderungen)
+    ============================================================
+
+    stats enthält Zahlen, die sich durch choices verändern.
+    Anfang ist alles 0.
+  */
+  const stats = {
+    xp: 0,
+    gold: 0,
+    str: 0,
+    dex: 0,
+    rep_kd: 0,
+    rep_coast: 0
+  };
+
+  /*
+    resetStats setzt alle Stats wieder auf 0 und aktualisiert dann die Anzeige.
+    for (const key in stats) läuft über alle Keys im stats-Objekt.
+  */
+  function resetStats() {
+    for (const key in stats) {
+      stats[key] = 0;
+    }
+    renderStats(); // danach sofort visuell updaten
+  }
+
+  /*
+    currentStepId merkt sich, in welchem Step wir gerade sind.
+    WICHTIG: "start" muss als Key in STEPS existieren,
+    sonst kommt gleich am Anfang "Fehler: Step existiert nicht."
+  */
+  let currentStepId = "start";
+
+  /*
+    ============================================================
+    4) RENDERING: Anzeige aktualisieren
+    ============================================================
+
+    renderStats schreibt die Zahlen aus stats in die HTML-Elemente.
+    Wir prüfen jedes Element, weil es null sein könnte.
+  */
+  function renderStats() {
+    if (statEls.xp) statEls.xp.textContent = stats.xp;
+    if (statEls.gold) statEls.gold.textContent = stats.gold;
+    if (statEls.str) statEls.str.textContent = stats.str;
+    if (statEls.dex) statEls.dex.textContent = stats.dex;
+    if (statEls.rep_kd) statEls.rep_kd.textContent = stats.rep_kd;
+    if (statEls.rep_coast) statEls.rep_coast.textContent = stats.rep_coast;
+  }
+
+  /*
+    renderStep:
+    - holt den aktuellen Step aus STEPS
+    - schreibt Dialogtext ins HTML
+    - belegt die Option-Buttons mit Text + "wohin geht's als nächstes"
+    - speichert meta-info in data-Attributen (dataset)
+  */
+  function renderStep() {
+    // Den Step (Knoten) holen
+    const step = STEPS[currentStepId];
+
+    // Wenn es den Step nicht gibt: Fehler anzeigen und Buttons ausblenden
+    if (!step) {
+      dialogEl.textContent = `Fehler: Step "${currentStepId}" existiert nicht.`;
+      optionEls.forEach(el => (el.style.display = "none"));
+      return;
+    }
+
+    // Dialogtext setzen
+    dialogEl.textContent = step.dialog;
+
+    /*
+      Für jeden Button (el) schauen wir:
+      - gibt es in step.options an dieser Position (i) eine Option?
+      - wenn nein: Button verstecken
+      - wenn ja: Text setzen + next/effects in dataset speichern
+
+      step.options?.[i]
+      - ?. heißt "optional chaining":
+        Wenn step.options nicht existiert, kommt nicht "Crash",
+        sondern opt wird einfach undefined.
+    */
+    optionEls.forEach((el, i) => {
+      const opt = step.options?.[i];
+
+      if (!opt || !opt.text) {
+        // Kein Button an dieser Position => verstecken
+        el.style.display = "none";
+        el.textContent = "";
+        el.dataset.next = "";
+        el.dataset.effects = "";
+        el.dataset.i = ""; // (Fix) sauber leeren
+      } else {
+        // Button aktivieren und befüllen
+        el.style.display = "block";
+        el.textContent = opt.text;
+
+        // Merken: wohin führt dieser Button?
+        // ?? "" heißt: wenn opt.next null/undefined ist, dann ""
+        el.dataset.next = opt.next ?? "";
+
+        // (Fix!) Merken: welcher Index ist dieser Button im options-Array?
+        // Das brauchen wir später, um opt.reset etc. zuverlässig zu finden.
+        el.dataset.i = String(i);
+
+        // Effekte als JSON-String in ein data-Attribut packen (falls vorhanden)
+        el.dataset.effects = opt.effects ? JSON.stringify(opt.effects) : "";
+      }
+    });
+  }
+
+  /*
+    ============================================================
+    5) EFFECTS: Stats verändern
+    ============================================================
+
+    applyEffects bekommt z.B. { xp: 10, gold: -5 } und addiert das auf stats.
+
+    - Object.entries(effects) gibt ein Array wie:
+      [ ["xp", 10], ["gold", -5] ]
+    - Wir prüfen:
+      a) kennen wir den stat-key überhaupt?
+      b) ist delta eine echte Zahl?
+  */
+  function applyEffects(effects) {
+    if (!effects) return;
+
+    for (const [key, delta] of Object.entries(effects)) {
+      // Unbekannte Keys ignorieren (z.B. Tippfehler)
+      if (!(key in stats)) continue;
+
+      // In Zahl umwandeln (auch falls "10" als String kommt)
+      const num = Number(delta);
+
+      // Nur wenn es wirklich eine Zahl ist
+      if (Number.isFinite(num)) stats[key] += num;
+    }
+  }
+
+  /*
+    ============================================================
+    6) CLICK HANDLING: Wenn man auf eine Option klickt
+    ============================================================
+
+    Wir hängen an jeden Button einen Click-Listener.
+    Der Listener macht dann:
+    - check: Button sichtbar?
+    - lese next-step aus dataset
+    - Effekte anwenden
+    - reset-Logik (falls opt.reset)
+    - currentStepId wechseln
+    - neuen Step rendern
+  */
+  optionEls.forEach((el) => {
+    el.addEventListener("click", () => {
+      // Wenn der Button versteckt ist: nichts tun
+      if (el.style.display === "none") return;
+
+      // Wohin führt der Klick?
+      const next = el.dataset.next;
+      if (!next) return;
+
+      // 1) Effekte anwenden (falls vorhanden)
+      if (el.dataset.effects) {
+        try {
+          // JSON-String wieder zurück in Objekt
+          const effects = JSON.parse(el.dataset.effects);
+          applyEffects(effects);
+          renderStats(); // Anzeige updaten
+        } catch (e) {
+          console.warn("Ungültige effects JSON:", el.dataset.effects);
+        }
+      }
+
+      // 2) reset-Logik: dafür brauchen wir die ORIGINAL option (opt)
+      const step = STEPS[currentStepId];
+
+      // (Fix) welcher Options-Index ist dieser Button?
+      const idx = Number(el.dataset.i);
+
+      // Die Option aus step.options holen
+      const opt = step.options?.[idx];
+
+      // Falls diese Option reset=true gesetzt hat => Stats zurücksetzen
+      if (opt?.reset) {
+        resetStats();
+      }
+
+      // 3) Step wechseln und neu rendern
+      currentStepId = next;
+      renderStep();
+    });
+  });
+
+  /*
+    ============================================================
+    7) INITIALISIERUNG: beim Laden der Seite
+    ============================================================
+  */
+  renderStats(); // Anfangszahlen anzeigen
+  renderStep();  // ersten Dialog anzeigen
+</script>
+
+
+
+
+</html>
 
