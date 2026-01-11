@@ -4,6 +4,559 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Quest-Viewer by Julian</title>
+  
+
+  <!--######################################
+                    CSS 
+  ######################################-->
+  
+  <style>
+    /*
+      ============================================================
+      :root  ->  "Wurzel" des Dokuments (quasi globaler Bereich)
+      ============================================================
+  
+      In :root definierst du meist CSS-Variablen (Custom Properties).
+      Die beginnen mit -- und können später mit var(--name) verwendet werden.
+  
+      Vorteil:
+      - Farben/Abstände zentral ändern
+      - konsistentes Design
+      - weniger Copy-Paste
+    */
+    :root{
+      --bg: #0f1115;                 /* Hintergrundfarbe des Bodens (body) */
+      --panel: #151922;              /* dunkles Panel (Karten/Container) */
+      --panel2: #111520;             /* zweite Panel-Variante (leicht anders) */
+      --text: #e7e9ee;               /* Standard-Textfarbe */
+      --muted: #a9afbf;              /* "abgeschwächter" Text (Untertitel/Meta) */
+      --line: rgba(255,255,255,0.10);/* Linienfarbe für Rahmen/Trennlinien */
+      --accent: #d2a84b;             /* Akzentfarbe (Gold) */
+      --danger: #ff4d6d;             /* Warn-/Fehlerfarbe (Rot/Pink) */
+      --ok: #51cf66;                 /* Erfolg/OK (Grün) */
+      --radius: 14px;                /* Standard-Rundung für Ecken */
+      --shadow: 0 12px 35px rgba(0,0,0,.35); /* Standard-Schatten */
+      --maxw: 1050px;                /* Maximalbreite des Inhalts */
+    }
+  
+    /*
+      ============================================================
+      *   ->  Universal-Selektor: gilt für ALLE Elemente
+      ============================================================
+  
+      box-sizing: border-box ist ein "Lebensretter".
+      Normalerweise rechnet CSS Breite + Padding + Border zusammen,
+      sodass Layouts mühsam werden.
+  
+      border-box bedeutet:
+      - width/height sind "inklusive" padding und border
+      - dadurch bleibt alles berechenbarer
+    */
+    * { box-sizing: border-box; }
+  
+    /*
+      ============================================================
+      body  ->  der gesamte Seitenkörper
+      ============================================================
+  
+      Hier definierst du:
+      - Abstand/Schrift
+      - Hintergrund (mehrere Ebenen)
+      - Textfarbe
+      - Zeilenhöhe
+    */
+    body{
+      margin: 0; /* Standard-Browser-Rand entfernen (sonst hat body oft 8px) */
+  
+      /*
+        font-family:
+        Eine "Font-Stack"-Liste: Browser nimmt die erste verfügbare Schrift.
+        ui-sans-serif / system-ui: moderne System-Schriften (Windows/Mac/Linux)
+        Danach Fallbacks wie Roboto, Helvetica, Arial ...
+      */
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+                   Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  
+      /*
+        background:
+        Du gibst hier gleich mehrere Hintergründe an.
+        Das ist wie Folien übereinander:
+        - zuerst radial-gradient #1 (Goldschimmer oben links)
+        - dann radial-gradient #2 (Grünschimmer oben rechts)
+        - zuletzt die Basisfarbe var(--bg)
+  
+        radial-gradient(...) erzeugt einen kreisförmigen Farbverlauf.
+        Beispiel:
+        radial-gradient(1200px 600px at 20% -10%, ...):
+          - 1200x600 = "Ausdehnung" der Ellipse
+          - at 20% -10% = Startpunkt (auch außerhalb der Seite möglich)
+          - rgba(...,.18) = Farbe mit Transparenz
+          - transparent 55% = ab 55% wird es durchsichtig (verläuft aus)
+      */
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(210,168,75,.18), transparent 55%),
+        radial-gradient(900px 500px at 90% 10%, rgba(81,207,102,.10), transparent 55%),
+        var(--bg);
+  
+      color: var(--text);  /* Standard-Textfarbe der Seite */
+      line-height: 1.45;   /* Zeilenabstand: 1.45 * Schriftgröße (gut lesbar) */
+    }
+  
+    /*
+      ============================================================
+      header  ->  Kopfbereich oben (z.B. Titelzeile)
+      ============================================================
+  
+      sticky Header:
+      - bleibt beim Scrollen oben kleben
+      - wirkt wie eine "UI-Leiste"
+    */
+    header{
+      padding: 28px 18px 14px;
+      /* padding: oben rechts/links unten
+         28px oben (mehr Luft), 18px links/rechts, 14px unten */
+  
+      border-bottom: 1px solid var(--line); /* Unterkante als feine Linie */
+  
+      /*
+        background: linear-gradient
+        Von oben nach unten ein Verlauf:
+        oben etwas stärker, unten transparenter.
+        Ergebnis: Header wirkt wie ein "Glas" über dem Hintergrund.
+      */
+      background: linear-gradient(180deg,
+                  rgba(21,25,34,.85),  /* oben dunkler */
+                  rgba(15,17,21,.35)); /* unten transparenter */
+  
+      position: sticky; /* bleibt beim Scrollen "kleben" */
+      top: 0;           /* klebt an der Oberkante */
+      backdrop-filter: blur(8px);
+      /*
+        backdrop-filter: blur:
+        macht den Hintergrund HINTER dem Header unscharf
+        (Glassmorphism-Effekt).
+        Achtung: nicht in jedem Browser gleich stark unterstützt.
+      */
+  
+      z-index: 5; /* sorgt dafür, dass der Header über anderem Inhalt liegt */
+    }
+  
+    /*
+      ============================================================
+      .wrap  ->  ein "Wrapper" der den Inhalt zentriert und begrenzt
+      ============================================================
+  
+      width: min(var(--maxw), 100%):
+      - nimmt die kleinere Zahl aus (maxw) und 100%
+      - d.h. maximal 1050px breit, aber nie breiter als Bildschirm
+    */
+    .wrap{
+      width: min(var(--maxw), 100%);
+      margin: 0 auto; /* auto links/rechts = zentrieren */
+    }
+  
+    /*
+      ============================================================
+      .titlebar  ->  Layout für Titel + Untertitel nebeneinander
+      ============================================================
+  
+      display: flex macht eine "Flexbox"-Zeile:
+      - Elemente liegen in einer Reihe
+      - lassen sich gut ausrichten
+    */
+    .titlebar{
+      display: flex;          /* horizontales Layout */
+      gap: 14px;              /* Abstand zwischen den Flex-Items */
+      align-items: baseline;  /* richtet Text-Baselines aus (schön für h1 + subtitle) */
+      flex-wrap: wrap;        /* wenn zu wenig Platz, umbrechen statt quetschen */
+    }
+  
+    /*
+      h1 = Hauptüberschrift
+      margin: 0 entfernt Standardabstände
+    */
+    h1{
+      margin: 0;
+      font-size: 22px;        /* Schriftgröße */
+      letter-spacing: .2px;   /* minimaler Buchstabenabstand (wirkt "UI-mäßig") */
+    }
+  
+    .subtitle{
+      color: var(--muted);    /* grauer/abgeschwächter Text */
+      font-size: 13px;
+    }
+  
+    /*
+      main: Hauptbereich unter dem Header
+    */
+    main{
+      padding: 16px 18px 40px; /* oben/links-rechts/unten */
+    }
+  
+    /*
+      ============================================================
+      .card  ->  wiederverwendbare Kartenbox (Panel)
+      ============================================================
+  
+      card ist ein typisches UI-Pattern:
+      - Hintergrund, Border, Schatten, Rundung
+      - wirkt wie "Kasten" auf dem Hintergrund
+    */
+    .card{
+      background: linear-gradient(180deg,
+                  rgba(21,25,34,.85),
+                  rgba(17,21,32,.75));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+  
+      overflow: hidden;
+      /*
+        overflow: hidden schneidet Inhalte ab,
+        die über die Rundung hinausgehen (z.B. Bilder in der Card).
+        Sonst könnten Ecken "eckig" rausstehen.
+      */
+    }
+  
+    /*
+      .card + .card:
+      Das ist ein sogenannter "adjacent sibling selector".
+      Bedeutet:
+      - Wende das nur auf eine .card an, die DIREKT nach einer .card kommt.
+      Effekt:
+      - Karten bekommen Abstand nach oben, aber die erste nicht.
+    */
+    .card + .card { margin-top: 14px; }
+  
+    /*
+      ============================================================
+      .card-head  ->  Kopfzeile innerhalb einer Karte
+      ============================================================
+    */
+    .card-head{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+  
+      display: flex;                /* Kopfzeile als Flex-Reihe */
+      align-items: center;          /* vertikal mittig */
+      justify-content: space-between; /* links/rechts auseinander */
+      gap: 10px;
+  
+      background: rgba(255,255,255,0.02); /* minimal heller als Card */
+    }
+  
+    .card-head .label{
+      font-weight: 650;     /* semibold (650 ist okay, wird je nach Font gerundet) */
+      font-size: 13px;
+      letter-spacing: .2px;
+      color: var(--text);
+    }
+  
+    /*
+      .pill: kleines "Badge" (wie Chip/Tag)
+    */
+    .pill{
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 4px 10px;
+      border-radius: 999px; /* riesiger Radius => immer pillenförmig */
+      background: rgba(255,255,255,0.02);
+      white-space: nowrap;
+      /*
+        white-space: nowrap verhindert Umbruch.
+        Gut bei Badges: "XP +10" soll nicht in 2 Zeilen gehen.
+      */
+    }
+  
+    /*
+      em ist normalerweise kursiv.
+      Du machst daraus einen "Glow-Highlight".
+      - font-style: normal nimmt Kursiv raus
+      - text-shadow erzeugt Leuchteffekt
+    */
+    em {
+      color: #ffffff;
+      font-style: normal;
+      text-shadow: 0 0 5px #ffffff;
+    }
+  
+    /* ============================================================
+       Ausgangslage / Intro-Textblock
+       ============================================================ */
+    .intro{
+      padding: 14px;
+    }
+    .intro p{
+      margin: 0;               /* Standardabsatz-Abstand weg */
+      color: var(--text);
+    }
+    .intro .muted{
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 13px;
+    }
+  
+    /* ============================================================
+       Bildblock: figure + img(.scene) + figcaption
+       ============================================================ */
+  
+    figure{
+      margin: 0; /* figure hat sonst oft Default-Margins */
+      border-top: 1px solid var(--line);
+    }
+  
+    .scene{
+      display: block;
+      /*
+        Bilder sind standardmäßig inline (haben Baseline-Lücke).
+        display:block entfernt diese unschöne "Unterkante-Lücke".
+      */
+      width: 100%;
+      max-height: 360px;   /* Bild wird nicht höher als 360px */
+      object-fit: cover;
+      /*
+        object-fit: cover:
+        - Bild füllt den Bereich vollständig aus
+        - wird ggf. zugeschnitten (wie "Zoom/Crop")
+        Ideal für Bannerbilder.
+      */
+      background: rgba(255,255,255,0.03);
+    }
+  
+    figcaption{
+      padding: 10px 14px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+      background: rgba(0,0,0,0.18);
+    }
+  
+    /* ============================================================
+       2-Spalten Layout: .grid
+       ============================================================ */
+  
+    .grid{
+      display: grid;
+      /*
+        grid-template-columns: 2.02fr 0.8fr
+        bedeutet: zwei Spalten,
+        deren Breitenverhältnis ungefähr 2.02 : 0.8 ist.
+        "fr" = Fraction Unit (Anteil vom verfügbaren Platz).
+        Ergebnis:
+        - linke Spalte deutlich breiter (Dialog)
+        - rechte Spalte schmaler (Stats)
+      */
+      grid-template-columns: 2.02fr 0.8fr;
+      gap: 14px; /* Abstand zwischen den Spalten und Zeilen */
+    }
+  
+    /*
+      Media Query:
+      @media (max-width: 920px) bedeutet:
+      - Wenn der Bildschirm <= 920px breit ist (Tablet/Handy),
+        dann gelten die Regeln in diesem Block.
+  
+      Hier:
+      - grid wird einspaltig (1fr = eine Spalte)
+      => auf Mobile untereinander statt nebeneinander.
+    */
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+  
+    /* ============================================================
+       Dialoge: .dialog, .line, .speaker, .quote, .choice
+       ============================================================ */
+  
+    .dialog{
+      padding: 14px;
+    }
+  
+    .dialog p{
+      margin: 0 0 10px; /* unten Abstand zwischen Absätzen */
+    }
+  
+    .dialog p:last-child{
+      margin-bottom: 0; /* letzter Absatz soll keinen extra Abstand haben */
+    }
+  
+    /*
+      .line: ein "Dialog-Bubble"/Block
+      - border + background + radius => Card-in-Card Effekt
+    */
+    .line{
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      margin-bottom: 10px;
+    }
+  
+    .speaker{
+      display: inline-block;
+      /*
+        inline-block:
+        - verhält sich wie Text (inline),
+          aber man kann margin/padding vernünftig setzen.
+      */
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--accent);
+      margin-bottom: 6px;
+      letter-spacing: .2px;
+    }
+  
+    .npc{
+      color: var(--accent);
+      /* vermutlich: NPC-Namen/Marker sollen gold sein */
+    }
+  
+    .quote{
+      color: var(--text);
+      margin: 0;
+  
+      white-space: pre-wrap;
+      /*
+        pre-wrap:
+        - Zeilenumbrüche und mehrere Leerzeichen werden beibehalten
+        - trotzdem darf der Text umbrochen werden
+        Das ist super, wenn du Dialoge mit "echten" Umbrüchen speicherst.
+      */
+    }
+  
+    .choice{
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--line); /* gestrichelte Trennlinie */
+      color: var(--muted);
+      font-size: 13px;
+    }
+  
+    .choice b{
+      color: var(--text); /* fett markierter Teil soll heller sein */
+    }
+  
+    /* ============================================================
+       Stats: .stats, .stat-grid, .stat, .k, .v, .tag
+       ============================================================ */
+  
+    .stats{
+      padding: 14px;
+    }
+  
+    .stat-grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      /*
+        2 Spalten gleich breit.
+        Ideal für "XP | Gold" nebeneinander usw.
+      */
+      gap: 10px;
+    }
+  
+    .stat{
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.02);
+    }
+  
+    .stat .k{
+      font-size: 12px;
+      color: var(--muted);
+      /* k = key (Bezeichnung), z.B. "XP" */
+    }
+  
+    .stat .v{
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 4px;
+  
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      /*
+        v = value (Wert), z.B. 125
+        Flex ist hier praktisch, wenn daneben ein Tag steht (z.B. "+10").
+        baseline sorgt dafür, dass Zahl und Tag schön auf einer Linie liegen.
+      */
+    }
+  
+    .tag{
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(0,0,0,0.18);
+      /* kleines Badge neben Werten */
+    }
+  
+    /* ============================================================
+       Kleine Leiste für "Relevanz" / Hinweise: .option
+       ============================================================ */
+  
+    .option{
+      margin-top: 12px;
+      border-left: 3px solid var(--accent); /* linke Akzentkante */
+      padding: 10px 12px;
+      background: rgba(210,168,75,.08);     /* goldige Hinterlegung */
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+  
+    /*
+      .js-option:
+      Vermutlich Buttons/Optionen, die klickbar sind.
+      cursor:pointer macht Mauszeiger zur Hand (wie Link/Button).
+      user-select:none verhindert, dass man beim Klicken Text markiert.
+    */
+    .js-option{
+      cursor: pointer;
+      user-select: none;
+    }
+  
+    /*
+      Hover-Effekt:
+      Wenn man mit der Maus drüber fährt, wird es etwas heller.
+      filter: brightness(1.08) erhöht die Helligkeit um ~8%.
+    */
+    .js-option:hover{
+      filter: brightness(1.08);
+    }
+  
+    /* ============================================================
+       footer: Fußzeile unten
+       ============================================================ */
+    footer{
+      padding: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+  
+    /* ============================================================
+       Links: a und a:hover
+       ============================================================ */
+  
+    a{
+      color: var(--accent);     /* Links in Gold */
+      text-decoration: none;    /* Standard-Unterstreichung weg */
+    }
+  
+    a:hover{
+      text-decoration: underline; /* beim Hover wieder unterstreichen */
+    }
+  </style>
+
+
+
+
+
+
+  
   <style>
     :root{
       --bg: #0f1115;
@@ -376,288 +929,290 @@
   </main>
 </body>
 
-<script>
-  /*
-    ============================================================
-    1) DATEN: Die "Quest" als Wörterbuch (Object) von Steps
-    ============================================================
 
-    STEPS ist ein Objekt, in dem jeder Key (z.B. "node", "endeDemo")
-    einen Dialog-Knoten repräsentiert.
-
-    Jeder Step hat:
-    - dialog: Text, der angezeigt wird
-    - options: Array von Antwortmöglichkeiten (Buttons)
-      Jede Option kann haben:
-      - text: Button-Text
-      - next: ID des nächsten Steps (muss in STEPS existieren)
-      - effects: Stat-Änderungen, z.B. { xp:+75, gold:+25 }
-      - reset: true => Stats zurücksetzen (z.B. beim Neustart)
-  */
-  const STEPS = {
-
-    // Beispiel-Step: "node"
-    node: {
-      dialog: `Dialogue.`,
-      options: [
-        {
-          text: "Answer Option",
-          next: "next_node",
-          effects: { xp: +75, gold: +25, rep_coast: -1 }
-        }
-      ]
-    },
-
-    // Step fürs Ende der Demo
-    endeDemo: {
-      dialog: `Du hast das Ende der Quest-Demo erreicht.`,
-      options: [
-        { text: "Neu starten", next: "start", reset: true }
-      ]
-    }
-  };
-
-  /*
-    ============================================================
-    2) DOM: HTML-Elemente holen, die wir später "füttern"
-    ============================================================
-
-    DOM = das, was der Browser aus deinem HTML gebaut hat.
-    Wir greifen auf Elemente zu, um Text zu setzen / Buttons zu steuern.
-  */
-
-  // Das Textfeld/Element, wo der Dialogtext angezeigt wird
-  const dialogEl = document.getElementById("dialogText");
-
-  /*
-    querySelectorAll(".js-option") holt ALLE Elemente mit der Klasse js-option.
-    Array.from(...) macht daraus ein echtes Array, damit wir forEach etc. nutzen können.
-    optionEls sind also deine Antwort-Buttons (oder Klickflächen).
-  */
-  const optionEls = Array.from(document.querySelectorAll(".js-option"));
-
-  /*
-    Stat-Elemente:
-    Hier speichern wir die HTML-Elemente, die die Stats anzeigen.
-    Falls ein Element im HTML NICHT existiert => ist es null.
-    Das ist okay, wir prüfen später mit: if (statEls.xp) ...
-  */
-  const statEls = {
-    xp: document.getElementById("stat_xp"),
-    gold: document.getElementById("stat_gold"),
-    str: document.getElementById("stat_str"),
-    dex: document.getElementById("stat_dex"),
-    rep_kd: document.getElementById("stat_rep_kd"),
-    rep_coast: document.getElementById("stat_rep_coast"),
-  };
-
-  /*
-    ============================================================
-    3) STATE: Unsere "Spielwerte" (hier als kumulierte Änderungen)
-    ============================================================
-
-    stats enthält Zahlen, die sich durch choices verändern.
-    Anfang ist alles 0.
-  */
-  const stats = {
-    xp: 0,
-    gold: 0,
-    str: 0,
-    dex: 0,
-    rep_kd: 0,
-    rep_coast: 0
-  };
-
-  /*
-    resetStats setzt alle Stats wieder auf 0 und aktualisiert dann die Anzeige.
-    for (const key in stats) läuft über alle Keys im stats-Objekt.
-  */
-  function resetStats() {
-    for (const key in stats) {
-      stats[key] = 0;
-    }
-    renderStats(); // danach sofort visuell updaten
-  }
-
-  /*
-    currentStepId merkt sich, in welchem Step wir gerade sind.
-    WICHTIG: "start" muss als Key in STEPS existieren,
-    sonst kommt gleich am Anfang "Fehler: Step existiert nicht."
-  */
-  let currentStepId = "start";
-
-  /*
-    ============================================================
-    4) RENDERING: Anzeige aktualisieren
-    ============================================================
-
-    renderStats schreibt die Zahlen aus stats in die HTML-Elemente.
-    Wir prüfen jedes Element, weil es null sein könnte.
-  */
-  function renderStats() {
-    if (statEls.xp) statEls.xp.textContent = stats.xp;
-    if (statEls.gold) statEls.gold.textContent = stats.gold;
-    if (statEls.str) statEls.str.textContent = stats.str;
-    if (statEls.dex) statEls.dex.textContent = stats.dex;
-    if (statEls.rep_kd) statEls.rep_kd.textContent = stats.rep_kd;
-    if (statEls.rep_coast) statEls.rep_coast.textContent = stats.rep_coast;
-  }
-
-  /*
-    renderStep:
-    - holt den aktuellen Step aus STEPS
-    - schreibt Dialogtext ins HTML
-    - belegt die Option-Buttons mit Text + "wohin geht's als nächstes"
-    - speichert meta-info in data-Attributen (dataset)
-  */
-  function renderStep() {
-    // Den Step (Knoten) holen
-    const step = STEPS[currentStepId];
-
-    // Wenn es den Step nicht gibt: Fehler anzeigen und Buttons ausblenden
-    if (!step) {
-      dialogEl.textContent = `Fehler: Step "${currentStepId}" existiert nicht.`;
-      optionEls.forEach(el => (el.style.display = "none"));
-      return;
-    }
-
-    // Dialogtext setzen
-    dialogEl.textContent = step.dialog;
-
+  <!--######################################
+                  JAVASCRIPT 
+  ######################################-->
+  
+  <script>
     /*
-      Für jeden Button (el) schauen wir:
-      - gibt es in step.options an dieser Position (i) eine Option?
-      - wenn nein: Button verstecken
-      - wenn ja: Text setzen + next/effects in dataset speichern
-
-      step.options?.[i]
-      - ?. heißt "optional chaining":
-        Wenn step.options nicht existiert, kommt nicht "Crash",
-        sondern opt wird einfach undefined.
+      ============================================================
+      1) DATEN: Die "Quest" als Wörterbuch (Object) von Steps
+      ============================================================
+  
+      STEPS ist ein Objekt, in dem jeder Key (z.B. "node", "endeDemo")
+      einen Dialog-Knoten repräsentiert.
+  
+      Jeder Step hat:
+      - dialog: Text, der angezeigt wird
+      - options: Array von Antwortmöglichkeiten (Buttons)
+        Jede Option kann haben:
+        - text: Button-Text
+        - next: ID des nächsten Steps (muss in STEPS existieren)
+        - effects: Stat-Änderungen, z.B. { xp:+75, gold:+25 }
+        - reset: true => Stats zurücksetzen (z.B. beim Neustart)
     */
-    optionEls.forEach((el, i) => {
-      const opt = step.options?.[i];
-
-      if (!opt || !opt.text) {
-        // Kein Button an dieser Position => verstecken
-        el.style.display = "none";
-        el.textContent = "";
-        el.dataset.next = "";
-        el.dataset.effects = "";
-        el.dataset.i = ""; // (Fix) sauber leeren
-      } else {
-        // Button aktivieren und befüllen
-        el.style.display = "block";
-        el.textContent = opt.text;
-
-        // Merken: wohin führt dieser Button?
-        // ?? "" heißt: wenn opt.next null/undefined ist, dann ""
-        el.dataset.next = opt.next ?? "";
-
-        // (Fix!) Merken: welcher Index ist dieser Button im options-Array?
-        // Das brauchen wir später, um opt.reset etc. zuverlässig zu finden.
-        el.dataset.i = String(i);
-
-        // Effekte als JSON-String in ein data-Attribut packen (falls vorhanden)
-        el.dataset.effects = opt.effects ? JSON.stringify(opt.effects) : "";
+    const STEPS = {
+  
+      // Beispiel-Step: "node"
+      node: {
+        dialog: `Dialogue.`,
+        options: [
+          {
+            text: "Answer Option",
+            next: "next_node",
+            effects: { xp: +75, gold: +25, rep_coast: -1 }
+          }
+        ]
+      },
+  
+      // Step fürs Ende der Demo
+      endeDemo: {
+        dialog: `Du hast das Ende der Quest-Demo erreicht.`,
+        options: [
+          { text: "Neu starten", next: "start", reset: true }
+        ]
       }
-    });
-  }
-
-  /*
-    ============================================================
-    5) EFFECTS: Stats verändern
-    ============================================================
-
-    applyEffects bekommt z.B. { xp: 10, gold: -5 } und addiert das auf stats.
-
-    - Object.entries(effects) gibt ein Array wie:
-      [ ["xp", 10], ["gold", -5] ]
-    - Wir prüfen:
-      a) kennen wir den stat-key überhaupt?
-      b) ist delta eine echte Zahl?
-  */
-  function applyEffects(effects) {
-    if (!effects) return;
-
-    for (const [key, delta] of Object.entries(effects)) {
-      // Unbekannte Keys ignorieren (z.B. Tippfehler)
-      if (!(key in stats)) continue;
-
-      // In Zahl umwandeln (auch falls "10" als String kommt)
-      const num = Number(delta);
-
-      // Nur wenn es wirklich eine Zahl ist
-      if (Number.isFinite(num)) stats[key] += num;
+    };
+  
+    /*
+      ============================================================
+      2) DOM: HTML-Elemente holen, die wir später "füttern"
+      ============================================================
+  
+      DOM = das, was der Browser aus deinem HTML gebaut hat.
+      Wir greifen auf Elemente zu, um Text zu setzen / Buttons zu steuern.
+    */
+  
+    // Das Textfeld/Element, wo der Dialogtext angezeigt wird
+    const dialogEl = document.getElementById("dialogText");
+  
+    /*
+      querySelectorAll(".js-option") holt ALLE Elemente mit der Klasse js-option.
+      Array.from(...) macht daraus ein echtes Array, damit wir forEach etc. nutzen können.
+      optionEls sind also deine Antwort-Buttons (oder Klickflächen).
+    */
+    const optionEls = Array.from(document.querySelectorAll(".js-option"));
+  
+    /*
+      Stat-Elemente:
+      Hier speichern wir die HTML-Elemente, die die Stats anzeigen.
+      Falls ein Element im HTML NICHT existiert => ist es null.
+      Das ist okay, wir prüfen später mit: if (statEls.xp) ...
+    */
+    const statEls = {
+      xp: document.getElementById("stat_xp"),
+      gold: document.getElementById("stat_gold"),
+      str: document.getElementById("stat_str"),
+      dex: document.getElementById("stat_dex"),
+      rep_kd: document.getElementById("stat_rep_kd"),
+      rep_coast: document.getElementById("stat_rep_coast"),
+    };
+  
+    /*
+      ============================================================
+      3) STATE: Unsere "Spielwerte" (hier als kumulierte Änderungen)
+      ============================================================
+  
+      stats enthält Zahlen, die sich durch choices verändern.
+      Anfang ist alles 0.
+    */
+    const stats = {
+      xp: 0,
+      gold: 0,
+      str: 0,
+      dex: 0,
+      rep_kd: 0,
+      rep_coast: 0
+    };
+  
+    /*
+      resetStats setzt alle Stats wieder auf 0 und aktualisiert dann die Anzeige.
+      for (const key in stats) läuft über alle Keys im stats-Objekt.
+    */
+    function resetStats() {
+      for (const key in stats) {
+        stats[key] = 0;
+      }
+      renderStats(); // danach sofort visuell updaten
     }
-  }
-
-  /*
-    ============================================================
-    6) CLICK HANDLING: Wenn man auf eine Option klickt
-    ============================================================
-
-    Wir hängen an jeden Button einen Click-Listener.
-    Der Listener macht dann:
-    - check: Button sichtbar?
-    - lese next-step aus dataset
-    - Effekte anwenden
-    - reset-Logik (falls opt.reset)
-    - currentStepId wechseln
-    - neuen Step rendern
-  */
-  optionEls.forEach((el) => {
-    el.addEventListener("click", () => {
-      // Wenn der Button versteckt ist: nichts tun
-      if (el.style.display === "none") return;
-
-      // Wohin führt der Klick?
-      const next = el.dataset.next;
-      if (!next) return;
-
-      // 1) Effekte anwenden (falls vorhanden)
-      if (el.dataset.effects) {
-        try {
-          // JSON-String wieder zurück in Objekt
-          const effects = JSON.parse(el.dataset.effects);
-          applyEffects(effects);
-          renderStats(); // Anzeige updaten
-        } catch (e) {
-          console.warn("Ungültige effects JSON:", el.dataset.effects);
-        }
-      }
-
-      // 2) reset-Logik: dafür brauchen wir die ORIGINAL option (opt)
+  
+    /*
+      currentStepId merkt sich, in welchem Step wir gerade sind.
+      WICHTIG: "start" muss als Key in STEPS existieren,
+      sonst kommt gleich am Anfang "Fehler: Step existiert nicht."
+    */
+    let currentStepId = "start";
+  
+    /*
+      ============================================================
+      4) RENDERING: Anzeige aktualisieren
+      ============================================================
+  
+      renderStats schreibt die Zahlen aus stats in die HTML-Elemente.
+      Wir prüfen jedes Element, weil es null sein könnte.
+    */
+    function renderStats() {
+      if (statEls.xp) statEls.xp.textContent = stats.xp;
+      if (statEls.gold) statEls.gold.textContent = stats.gold;
+      if (statEls.str) statEls.str.textContent = stats.str;
+      if (statEls.dex) statEls.dex.textContent = stats.dex;
+      if (statEls.rep_kd) statEls.rep_kd.textContent = stats.rep_kd;
+      if (statEls.rep_coast) statEls.rep_coast.textContent = stats.rep_coast;
+    }
+  
+    /*
+      renderStep:
+      - holt den aktuellen Step aus STEPS
+      - schreibt Dialogtext ins HTML
+      - belegt die Option-Buttons mit Text + "wohin geht's als nächstes"
+      - speichert meta-info in data-Attributen (dataset)
+    */
+    function renderStep() {
+      // Den Step (Knoten) holen
       const step = STEPS[currentStepId];
-
-      // (Fix) welcher Options-Index ist dieser Button?
-      const idx = Number(el.dataset.i);
-
-      // Die Option aus step.options holen
-      const opt = step.options?.[idx];
-
-      // Falls diese Option reset=true gesetzt hat => Stats zurücksetzen
-      if (opt?.reset) {
-        resetStats();
+  
+      // Wenn es den Step nicht gibt: Fehler anzeigen und Buttons ausblenden
+      if (!step) {
+        dialogEl.textContent = `Fehler: Step "${currentStepId}" existiert nicht.`;
+        optionEls.forEach(el => (el.style.display = "none"));
+        return;
       }
-
-      // 3) Step wechseln und neu rendern
-      currentStepId = next;
-      renderStep();
+  
+      // Dialogtext setzen
+      dialogEl.textContent = step.dialog;
+  
+      /*
+        Für jeden Button (el) schauen wir:
+        - gibt es in step.options an dieser Position (i) eine Option?
+        - wenn nein: Button verstecken
+        - wenn ja: Text setzen + next/effects in dataset speichern
+  
+        step.options?.[i]
+        - ?. heißt "optional chaining":
+          Wenn step.options nicht existiert, kommt nicht "Crash",
+          sondern opt wird einfach undefined.
+      */
+      optionEls.forEach((el, i) => {
+        const opt = step.options?.[i];
+  
+        if (!opt || !opt.text) {
+          // Kein Button an dieser Position => verstecken
+          el.style.display = "none";
+          el.textContent = "";
+          el.dataset.next = "";
+          el.dataset.effects = "";
+          el.dataset.i = ""; // (Fix) sauber leeren
+        } else {
+          // Button aktivieren und befüllen
+          el.style.display = "block";
+          el.textContent = opt.text;
+  
+          // Merken: wohin führt dieser Button?
+          // ?? "" heißt: wenn opt.next null/undefined ist, dann ""
+          el.dataset.next = opt.next ?? "";
+  
+          // (Fix!) Merken: welcher Index ist dieser Button im options-Array?
+          // Das brauchen wir später, um opt.reset etc. zuverlässig zu finden.
+          el.dataset.i = String(i);
+  
+          // Effekte als JSON-String in ein data-Attribut packen (falls vorhanden)
+          el.dataset.effects = opt.effects ? JSON.stringify(opt.effects) : "";
+        }
+      });
+    }
+  
+    /*
+      ============================================================
+      5) EFFECTS: Stats verändern
+      ============================================================
+  
+      applyEffects bekommt z.B. { xp: 10, gold: -5 } und addiert das auf stats.
+  
+      - Object.entries(effects) gibt ein Array wie:
+        [ ["xp", 10], ["gold", -5] ]
+      - Wir prüfen:
+        a) kennen wir den stat-key überhaupt?
+        b) ist delta eine echte Zahl?
+    */
+    function applyEffects(effects) {
+      if (!effects) return;
+  
+      for (const [key, delta] of Object.entries(effects)) {
+        // Unbekannte Keys ignorieren (z.B. Tippfehler)
+        if (!(key in stats)) continue;
+  
+        // In Zahl umwandeln (auch falls "10" als String kommt)
+        const num = Number(delta);
+  
+        // Nur wenn es wirklich eine Zahl ist
+        if (Number.isFinite(num)) stats[key] += num;
+      }
+    }
+  
+    /*
+      ============================================================
+      6) CLICK HANDLING: Wenn man auf eine Option klickt
+      ============================================================
+  
+      Wir hängen an jeden Button einen Click-Listener.
+      Der Listener macht dann:
+      - check: Button sichtbar?
+      - lese next-step aus dataset
+      - Effekte anwenden
+      - reset-Logik (falls opt.reset)
+      - currentStepId wechseln
+      - neuen Step rendern
+    */
+    optionEls.forEach((el) => {
+      el.addEventListener("click", () => {
+        // Wenn der Button versteckt ist: nichts tun
+        if (el.style.display === "none") return;
+  
+        // Wohin führt der Klick?
+        const next = el.dataset.next;
+        if (!next) return;
+  
+        // 1) Effekte anwenden (falls vorhanden)
+        if (el.dataset.effects) {
+          try {
+            // JSON-String wieder zurück in Objekt
+            const effects = JSON.parse(el.dataset.effects);
+            applyEffects(effects);
+            renderStats(); // Anzeige updaten
+          } catch (e) {
+            console.warn("Ungültige effects JSON:", el.dataset.effects);
+          }
+        }
+  
+        // 2) reset-Logik: dafür brauchen wir die ORIGINAL option (opt)
+        const step = STEPS[currentStepId];
+  
+        // (Fix) welcher Options-Index ist dieser Button?
+        const idx = Number(el.dataset.i);
+  
+        // Die Option aus step.options holen
+        const opt = step.options?.[idx];
+  
+        // Falls diese Option reset=true gesetzt hat => Stats zurücksetzen
+        if (opt?.reset) {
+          resetStats();
+        }
+  
+        // 3) Step wechseln und neu rendern
+        currentStepId = next;
+        renderStep();
+      });
     });
-  });
-
-  /*
-    ============================================================
-    7) INITIALISIERUNG: beim Laden der Seite
-    ============================================================
-  */
-  renderStats(); // Anfangszahlen anzeigen
-  renderStep();  // ersten Dialog anzeigen
-</script>
-
-
-
-
+  
+    /*
+      ============================================================
+      7) INITIALISIERUNG: beim Laden der Seite
+      ============================================================
+    */
+    renderStats(); // Anfangszahlen anzeigen
+    renderStep();  // ersten Dialog anzeigen
+  </script>
+  
 </html>
 
