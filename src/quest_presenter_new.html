@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quest-Präsentator: Handelsbeziehungen im Küstenland</title>
+
+  <style>
+    :root{
+      --bg: #eef4ff;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #475569;
+      --line: rgba(15, 23, 42, .12);
+      --accent: #2f6feb;
+      --accent-soft: rgba(47,111,235,.12);
+      --shadow: 0 10px 24px rgba(15,23,42,.08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    /* Layout */
+    header, main, footer{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 18px;
+    }
+
+    header{
+      padding-top: 28px;
+    }
+
+    header h1{
+      margin: 0 0 6px 0;
+      font-size: clamp(1.4rem, 2.3vw, 2rem);
+      letter-spacing: .2px;
+    }
+
+    header p{
+      margin: 6px 0 0 0;
+      color: var(--muted);
+    }
+
+    hr{
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 18px 0;
+    }
+
+    /* Cards/Sections */
+    section{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px;
+      margin: 14px 0;
+    }
+
+    section h2{
+      margin: 0 0 10px 0;
+      font-size: 1.25rem;
+    }
+
+    section h3{
+      margin: 14px 0 8px 0;
+      font-size: 1.05rem;
+    }
+
+    /* Anchor handling */
+    /* Falls du später einen sticky Header machst: damit der Scroll nicht "unter" dem Header landet */
+    section { scroll-margin-top: 14px; }
+
+    /* WICHTIG: „Scroll-Luft“ am Ende, damit der letzte Node wirklich nach oben scrollen kann */
+    main { padding-bottom: 45vh; }
+
+    /* Active node highlight without JS */
+    section:target{
+      border-color: var(--accent);
+      background: linear-gradient(0deg, #fff, #fff) padding-box,
+                  linear-gradient(135deg, rgba(47,111,235,.35), rgba(47,111,235,0)) border-box;
+      box-shadow: 0 14px 35px rgba(47,111,235,.18), var(--shadow);
+      position: relative;
+    }
+    section:target::before{
+      content: "Aktiver Knoten";
+      position: absolute;
+      top: -10px;
+      right: 14px;
+      font-size: .78rem;
+      color: var(--accent);
+      background: #fff;
+      border: 1px solid rgba(47,111,235,.35);
+      padding: 4px 8px;
+      border-radius: 999px;
+      box-shadow: 0 8px 16px rgba(15,23,42,.08);
+    }
+
+    /* Navigation chips */
+    nav{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    nav a{
+      display: inline-block;
+      text-decoration: none;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid rgba(47,111,235,.25);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .92rem;
+    }
+    nav a:hover{
+      filter: brightness(0.98);
+      text-decoration: underline;
+    }
+
+    /* Lists and details */
+    ul, ol { margin: 8px 0 0 22px; }
+    li { margin: 4px 0; }
+
+    details{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px dashed rgba(15,23,42,.18);
+      border-radius: 12px;
+      background: rgba(255,255,255,.6);
+    }
+    summary{
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Blockquote / dialogue */
+    blockquote{
+      margin: 10px 0;
+      padding: 10px 12px;
+      border-left: 4px solid rgba(47,111,235,.45);
+      background: rgba(47,111,235,.06);
+      border-radius: 10px;
+      color: #0f172a;
+    }
+
+    pre{
+      margin: 0;
+      padding: 10px 12px;
+      background: rgba(15,23,42,.06);
+      border: 1px solid rgba(15,23,42,.10);
+      border-radius: 10px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: .92rem;
+    }
+
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: .92em;
+    }
+
+    footer small{
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <!--##############QUESTNAME UND REGION##############-->
+    <h1>Quest: Handelsbeziehungen im Küstenland</h1>
+    <p><strong>Region:</strong> Küstenland (Ardea ⇄ Kap Dun)</p>
+
+    <!-- Quick-Navigation -->
+    <nav aria-label="Quest-Navigation">
+      <a href="#top">Übersicht</a>
+      <a href="#start">Start</a>
+      <a href="#a">Knoten A</a>
+      <a href="#b">Knoten B</a>
+      <a href="#c">Knoten C</a>
+      <a href="#d">Knoten D</a>
+    </nav>
+
+    <hr>
+  </header>
+
+  <main>
+
+    <section id="top">
+      <h2>Übersicht</h2>
+
+      <!--##############KURZBESCHREIBUNG##############-->
+      <p><strong>Kurzbeschreibung:</strong> Die Quest beginnt in Ardea und führt über Handelskontakte in die Abtei und Richtung Kap Dun. Entscheidungen beeinflussen Vertrauen, Bezahlung und Folgequests.</p>
+
+      <p><strong>Quest Metadaten</strong></p>
+      <ul>
+        <!--##############METADATEN##############-->
+        <li><strong>Questgeber:</strong> Pandor (Ardea)</li>
+        <li><strong>Voraussetzung:</strong> keine</li>
+        <li><strong>Art:</strong> Laufbursche, moralisches Dilemma</li>
+        <li><strong>Kurzbeschreibung:</strong> Der Held soll Vorräte von Pandor zu unterschiedlichen NPCs bringen … aber es sind nicht genug Vorräte vorhanden.</li>
+        <li><strong>Belohnungen:</strong> abhängig vom Verlauf: Gold, Ruf, Folgequest, ggf. Attributbonus</li>
+        <li><strong>Wichtige Flags:</strong> für jeden belieferten NPC wird eine Flag gesetzt</li>
+      </ul>
+
+      <hr>
+      <p><a href="#start">→ Zum Start</a></p>
+    </section>
+
+    <section id="start">
+      <h2>Start: Ardea</h2>
+
+      <p><strong>Szene:</strong> Lagermeister Pandor steht im Lagerhaus von Ardea.</p>
+
+      <p><strong>Dialog:</strong></p>
+      <blockquote>
+        <pre>
+wenn Ruf > x:
+  Pandor: ...
+sonst:
+  Pandor: ...
+        </pre>
+      </blockquote>
+
+      <h3>Optionen</h3>
+      <ol>
+        <li><a href="#a">Option 1: „Ich hör mir das an.“</a></li>
+        <li><a href="#b">Option 2: „Klingt nach Ärger. Was springt für mich raus?“</a></li>
+        <li><a href="#c">Option 3: „Keine Zeit. Such dir wen anderen.“</a></li>
+      </ol>
+
+      <p><a href="#top">↑ Zur Übersicht</a></p>
+    </section>
+
+    <section id="a">
+      <h2>Knoten A: Zusage</h2>
+
+      <p><strong>Inhalt:</strong> [Was passiert, wenn der Held zusagt?]</p>
+
+      <p><strong>Wichtige Information:</strong></p>
+      <ul>
+        <li>[Hinweis 1]</li>
+        <li>[Hinweis 2]</li>
+      </ul>
+
+      <details>
+        <summary>Technik/Flags</summary>
+        <ul>
+          <li>Setze Flag: <code>quest_trade_started = true</code></li>
+          <li>Optional: Ruf +1 bei [Fraktion/NPC]</li>
+        </ul>
+      </details>
+
+      <h3>Weiter</h3>
+      <ol>
+        <li><a href="#d">Weiter zu Knoten D (Reise/Übergabe/Komplikation)</a></li>
+        <li><a href="#start">Zurück zum Start (andere Option testen)</a></li>
+      </ol>
+
+      <p><a href="#top">↑ Zur Übersicht</a></p>
+    </section>
+
+    <section id="b">
+      <h2>Knoten B: Verhandlung</h2>
+
+      <p><strong>Inhalt:</strong> [Held verhandelt härter / stellt Fragen / will Vorauszahlung.]</p>
+
+      <p><strong>Dialog:</strong></p>
+      <blockquote>
+        <p>[Held: “…”]<br>
+           [NPC: “…”]</p>
+      </blockquote>
+
+      <details>
+        <summary>Mögliche Konsequenzen</summary>
+        <ul>
+          <li>Mehr Gold, aber weniger Vertrauen</li>
+          <li>Oder: NPC testet den Helden (kleiner Nebenauftrag)</li>
+        </ul>
+      </details>
+
+      <h3>Optionen</h3>
+      <ol>
+        <li><a href="#a">Einlenken und zusagen</a></li>
+        <li><a href="#d">Direkt zur Aufgabe, aber mit „Misstrauen“-Flag</a></li>
+      </ol>
+
+      <p><a href="#top">↑ Zur Übersicht</a></p>
+    </section>
+
+    <section id="c">
+      <h2>Knoten C: Ablehnung</h2>
+
+      <p><strong>Inhalt:</strong> [Held lehnt ab – Quest kann später wieder aufgenommen werden oder kippt.]</p>
+
+      <details>
+        <summary>Optional: Späterer Wiedereinstieg</summary>
+        <p>[Wie kann der Spieler später doch noch einsteigen? Z. B. nach einem Ereignis, Gespräch, Fundstück.]</p>
+      </details>
+
+      <h3>Optionen</h3>
+      <ol>
+        <li><a href="#start">Zurück zum Start</a></li>
+        <li><a href="#top">Zur Übersicht</a></li>
+      </ol>
+    </section>
+
+    <section id="d">
+      <h2>Knoten D: Komplikation / Hauptteil</h2>
+
+      <p><strong>Inhalt:</strong> [Hier kommt der eigentliche Twist: Überfall, Betrug, falsche Ware, rivalisierender Händler, etc.]</p>
+
+      <h3>Entscheidung</h3>
+      <ol>
+        <li><a href="#a">„Ich regel das sauber.“ (Diplomatie/Beweise/Vertrauen)</a></li>
+        <li><a href="#b">„Ich will meinen Anteil.“ (hart/egoistisch)</a></li>
+        <li><a href="#c">„Mir reicht’s.“ (Abbruch/anderer Ausgang)</a></li>
+      </ol>
+
+      <details>
+        <summary>Enden/Outcomes (Notizblock)</summary>
+        <ul>
+          <li><strong>Gutes Ende:</strong> [Belohnung + Folgequest + Ruf]</li>
+          <li><strong>Neutrales Ende:</strong> [nur Gold / nur Item]</li>
+          <li><strong>Schlechtes Ende:</strong> [NPC beleidigt / Zugang gesperrt / Ruf-]</li>
+        </ul>
+      </details>
+
+      <p><a href="#top">↑ Zur Übersicht</a></p>
+    </section>
+
+    <section>
+      <h2>Ende / Notizen</h2>
+      <p>[Hier kannst du „Was der Spieler gelernt hat“, „Welche Weltinfos gesetzt wurden“ und „Follow-ups“ reinschreiben.]</p>
+      <p><a href="#top">↑ Zur Übersicht</a></p>
+    </section>
+
+  </main>
+
+  <footer>
+    <hr>
+    <p><small>Quest-Präsentator — Stand: [Datum/Version]</small></p>
+  </footer>
+
+  <!-- OPTIONAL: JS-Upgrade (kannst du weglassen)
+       - Zentriert den Zielknoten (hilft zusätzlich bei "unten am Ende"-Gefühl)
+       - Setzt kurz eine Klasse zum "Aufleuchten" (falls du das stärker willst als :target)
+  -->
+  <script>
+    (function(){
+      function focusTargetFromHash(){
+        const id = location.hash ? location.hash.slice(1) : "";
+        if(!id) return;
+
+        const el = document.getElementById(id);
+        if(!el) return;
+
+        // Zentriere den Knoten etwas angenehmer
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // Kurzes "Flash" zusätzlich zu :target (optional)
+        el.classList.add("flash");
+        setTimeout(()=> el.classList.remove("flash"), 700);
+      }
+
+      // Beim Laden, und wenn Hash wechselt
+      window.addEventListener("load", focusTargetFromHash);
+      window.addEventListener("hashchange", focusTargetFromHash);
+    })();
+  </script>
+
+  <style>
+    /* Nur für das optionale JS-Flash */
+    .flash{
+      animation: flashGlow .7s ease-out;
+    }
+    @keyframes flashGlow{
+      0% { box-shadow: 0 0 0 rgba(47,111,235,0); }
+      40% { box-shadow: 0 0 0 6px rgba(47,111,235,.18), 0 16px 36px rgba(47,111,235,.20); }
+      100% { box-shadow: 0 0 0 rgba(47,111,235,0); }
+    }
+  </style>
+
+</body>
+</html>
